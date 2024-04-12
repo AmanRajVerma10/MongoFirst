@@ -1,15 +1,20 @@
 const mongodb = require("mongodb");
-const { get } = require("../routes/admin");
 
 const getDb = require("../util/database").getDb;
 
 class User {
-  constructor(name, email, cart, id) {
+  // constructor(name, email, cart, id) {
+  //   this.name = name;
+  //   this.email = email;
+  //   this.cart = cart;
+  //   this._id = id;
+  // }
+  constructor(name, email, cart = { items: [] }, id) {
     this.name = name;
     this.email = email;
     this.cart = cart;
     this._id = id;
-  }
+}
   save() {
     let db = getDb();
     return db
@@ -23,13 +28,59 @@ class User {
       });
   }
   addToCart(product) {
-    const updatedCart = { items: [{ ...product, quantity: 1 }] };
+    console.log("heyyyy",this.cart)
+    const cartProductIndex = this.cart.items.findIndex((p) => {
+      return p.productId.toString() === product._id.toString();
+    });
+    let newQuantity = 1;
+    const updatedCartItems = [...this.cart.items];
+    if (cartProductIndex >= 0) {
+      newQuantity = this.cart.items[cartProductIndex].quantity + 1;
+      updatedCartItems[cartProductIndex].quantity = newQuantity;
+    } else {
+      updatedCartItems.push({
+        productId: new mongodb.ObjectId(product._id),
+        quantity: newQuantity,
+      });
+    }
+    const updatedCart = {items: updatedCartItems};
     const db = getDb();
-    return db.collection("users").updateOne(
-      { _id: new mongodb.ObjectId(this._id) },
-      { $set: { cart: updatedCart } }
-    );
+    return db
+      .collection("users")
+      .updateOne(
+        { _id: new mongodb.ObjectId(this._id) },
+        { $set: { cart: updatedCart } }
+      );
   }
+
+  // addToCart(product) {
+  //   const cartProductIndex = this.cart.items.findIndex(cp => {
+  //     return cp.productId.toString() === product._id.toString();
+  //   });
+  //   let newQuantity = 1;
+  //   const updatedCartItems = [...this.cart.items];
+
+  //   if (cartProductIndex >= 0) {
+  //     newQuantity = this.cart.items[cartProductIndex].quantity + 1;
+  //     updatedCartItems[cartProductIndex].quantity = newQuantity;
+  //   } else {
+  //     updatedCartItems.push({
+  //       productId: new ObjectId(product._id),
+  //       quantity: newQuantity
+  //     });
+  //   }
+  //   const updatedCart = {
+  //     items: updatedCartItems
+  //   };
+  //   const db = getDb();
+  //   return db
+  //     .collection('users')
+  //     .updateOne(
+  //       { _id: new ObjectId(this._id) },
+  //       { $set: { cart: updatedCart } }
+  //     );
+  // }
+
   static findById(userId) {
     return getDb()
       .collection("users")
