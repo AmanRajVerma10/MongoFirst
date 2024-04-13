@@ -14,7 +14,7 @@ class User {
     this.email = email;
     this.cart = cart;
     this._id = id;
-}
+  }
   save() {
     let db = getDb();
     return db
@@ -27,8 +27,31 @@ class User {
         console.log(e);
       });
   }
+  getCart() {
+    let db = getDb();
+    const productIds = this.cart.items.map((item) => {
+      return item.productId;
+    });
+    return db.collection("products")
+      .find({ _id: { $in: productIds } })
+      .toArray()
+      .then((products) => {
+        return products.map((p) => {
+          return {
+            ...p,
+            quantity: this.cart.items.find((i) => {
+              return i.productId.toString() === p._id.toString();
+            }).quantity
+          };
+        });
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  }
+
   addToCart(product) {
-    console.log("heyyyy",this.cart)
+    console.log("heyyyy", this.cart);
     const cartProductIndex = this.cart.items.findIndex((p) => {
       return p.productId.toString() === product._id.toString();
     });
@@ -43,7 +66,7 @@ class User {
         quantity: newQuantity,
       });
     }
-    const updatedCart = {items: updatedCartItems};
+    const updatedCart = { items: updatedCartItems };
     const db = getDb();
     return db
       .collection("users")
