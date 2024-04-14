@@ -2,9 +2,9 @@ const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose=require('mongoose');
 
 const errorController = require('./controllers/error');
-const mongoConnect= require('./util/database').mongoConnect;
 const User= require('./models/user')
 
 const app = express();
@@ -32,6 +32,11 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect(()=>{
+mongoose.connect("mongodb+srv://Aman10:Gw8e9cffhVHQwKA2@cluster0.zkcwrac.mongodb.net/shop?retryWrites=true&w=majority&appName=Cluster0")
+.then(()=>{
   app.listen(3000);
+  console.log("Mongoose Connection Made!")
+})
+.catch(e=>{
+  console.log(e);
 })
